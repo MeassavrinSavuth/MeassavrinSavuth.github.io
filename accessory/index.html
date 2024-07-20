@@ -4,72 +4,118 @@
     <title>Car Accessories</title>
     <link rel="stylesheet" type="text/css" href="/css/global.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
 <body>
-    <h1>Car Accessories</h1>
- 
-    <h3>Add Accessory</h3>
-    <select id="accessory">
-        <option value="100">Car Cover</option>
-        <option value="200">Seat Covers</option>
-        <option value="30">Phone Holder</option>
-    </select>
-    <input type="number" id="amount" min="1" value="1">
-    <button class="add-button" onclick="addItem()">Add</button>
- 
-    <h2>Product List</h2>
-    <table id="productList">
-        <thead>
-            <tr>
-                <th>Accessory</th>
-                <th>Amount</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-        <tbody id="tb">
-        </tbody>
-        <tfoot class="css">
-            <tr>
-                <td colspan="2">Total Price:</td>
-                <td id="totalPrice">0 $</td>
-            </tr>
-            <tr>
-                <td colspan="2">VAT Price:</td>
-                <td id="vatPrice">0 $</td>
-            </tr>
-            <tr>
-                <td colspan="2">Net Price:</td>
-                <td id="netPrice">0 $</td>
-            </tr>
-        </tfoot>
-    </table>
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">Car Accessories</h1>
+        <button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addProductModal">Add New Product</button>
+        
+        <h2 class="mt-4">Product List</h2>
+        <table id="productList" class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Accessory</th>
+                    <th>Amount</th>
+                    <th>Price</th>
+                    <th>Cancel</th>
+                </tr>
+            </thead>
+            <tbody id="tb">
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" class="font-weight-bold">Total Price:</td>
+                    <td id="totalPrice">0 $</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="font-weight-bold">VAT Price:</td>
+                    <td id="vatPrice">0 $</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="font-weight-bold">Net Price:</td>
+                    <td id="netPrice">0 $</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Add Accessory Modal -->
+    <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addProductModalLabel">Add Accessory</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProductForm">
+                        <div class="form-group">
+                            <label for="accessory">Accessory</label>
+                            <select id="accessory" class="form-control">
+                                <option value="100">Car Cover</option>
+                                <option value="200">Seat Covers</option>
+                                <option value="30">Phone Holder</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="amount">Amount</label>
+                            <input type="number" id="amount" class="form-control" min="1" value="1">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="addItem()">Add</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        $(document).ready(function() {
-            $(".add-button").on("click", function() {
-                var accessorySelect = $("#accessory").find(":selected").text();
-                var accessoryPrice = parseFloat($("#accessory").val());
-                var amount = parseInt($("#amount").val());
-                var itemPrice = accessoryPrice * amount;
+        function addItem() {
+            var accessorySelect = $("#accessory").find(":selected").text();
+            var accessoryPrice = parseFloat($("#accessory").val());
+            var amount = parseInt($("#amount").val());
+            var itemPrice = accessoryPrice * amount;
 
-                var newRow = $("<tr>");
-                newRow.append("<td>" + accessorySelect + "</td>");
-                newRow.append("<td>" + amount + "</td>");
-                newRow.append("<td>" + itemPrice.toFixed(2) + " $</td>");
+            var newRow = $("<tr>");
+            newRow.append("<td>" + accessorySelect + "</td>");
+            newRow.append("<td>" + amount + "</td>");
+            newRow.append("<td>" + itemPrice.toFixed(2) + " $</td>");
+            newRow.append('<td><button class="btn btn-danger btn-sm remove-button">x</button></td>');
 
-                $("#tb").append(newRow);
+            $("#tb").append(newRow);
 
-                var totalPrice = parseFloat($("#totalPrice").text());
-                totalPrice += itemPrice;
-                $("#totalPrice").text(totalPrice.toFixed(2) + " $");
+            updatePrices();
 
-                var vatPrice = totalPrice * 0.07;
-                $("#vatPrice").text(vatPrice.toFixed(2) + " $");
-
-                var netPrice = totalPrice + vatPrice;
-                $("#netPrice").text(netPrice.toFixed(2) + " $");
+            // Add click event for remove buttons
+            $(".remove-button").off("click").on("click", function() {
+                $(this).closest("tr").remove();
+                updatePrices();
             });
-        });
+
+            // Close the modal
+            $('#addProductModal').modal('hide');
+        }
+
+        function updatePrices() {
+            var totalPrice = 0;
+            $("#tb tr").each(function() {
+                var price = parseFloat($(this).find("td:eq(2)").text());
+                totalPrice += price;
+            });
+            $("#totalPrice").text(totalPrice.toFixed(2) + " $");
+
+            var vatPrice = totalPrice * 0.07;
+            $("#vatPrice").text(vatPrice.toFixed(2) + " $");
+
+            var netPrice = totalPrice + vatPrice;
+            $("#netPrice").text(netPrice.toFixed(2) + " $");
+        }
     </script>
 </body>
 </html>
